@@ -1,0 +1,3 @@
+a port of unhosted.org and tom wu's javascript encryption logic to a more generic DSL. 
+
+more docs soon
