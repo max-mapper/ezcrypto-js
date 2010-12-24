@@ -1,6 +1,6 @@
-<SCRIPT src="ezcrypto.js"></SCRIPT>
+<script src="ezcrypto.js"></script>
 <script>
   var keys = ezcrypto.generateKeys();
-  var encryptedData = ezcrypto.encrypt('tacos', keys.public);
-  console.log(ezcrypto.decrypt(encryptedData.message, keys.public, keys.private, encryptedData.key));
+  var encryptedData = ezcrypto.encrypt('secrets', keys.public);
+  console.log(ezcrypto.decrypt(encryptedData.message, encryptedData.key, keys.public, keys.private));
 </script>

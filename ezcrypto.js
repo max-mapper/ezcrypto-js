@@ -14,7 +14,7 @@
     return {'key': encryptedKey, 'message': encryptedMessage};
   }
   
-  ezcrypto.decrypt = function(encryptedMessage, publicKey, privateKey, encryptedKey) {
+  ezcrypto.decrypt = function(encryptedMessage, encryptedKey, publicKey, privateKey) {
     var decryptedKey = RSADecrypt(encryptedKey, publicKey, privateKey);
     var decryptedMessage = byteArrayToString(rijndaelDecrypt(hexToByteArray(encryptedMessage), hexToByteArray(decryptedKey), 'ECB'));
     return decryptedMessage;

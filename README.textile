@@ -1,3 +1,56 @@
-a port of unhosted.org and tom wu's javascript encryption logic to a more generic DSL. 
+h1. EzCrypto.js - Easy to use Crypto for JavaScript
 
-more docs soon
+This is a nice and usable DSL that wraps some fantastic JavaScript encryption libraries from some awesome folks:
+  * "PidCrypt":https://www.pidder.com/pidcrypt/
+  * "Tom Wu":http://www-cs-students.stanford.edu/~tjw/jsbn/
+  * "Unhosted":http://unhosted.org
+  
+I didn't write any of the encryption libraries, I just wrapped them in a nice and easy to understand DSL that is inspired by the "EzCrypto":http://ezcrypto.rubyforge.org/ Ruby gem.
+
+h1. Example
+
+When you load @ezcrypto.js@ it will include all of the JavaScript files in @vendor/@. In the future this might turn into one big CommonJS style module.
+
+<pre>
+  <code>
+    <script src="ezcrypto.js"></script>
+    
+    // generate a public/private RSA keypair
+    var keys = ezcrypto.generateKeys();
+    => {"private": "3521df…", "public": "95d8cf…"}
+    
+    // AES encrypt your message, and then encrypt the AES key with your public RSA key
+    var encryptedData = ezcrypto.encrypt('secrets', keys.public);
+    => {"key": "8170f7…", "message": "72308a…"}
+    
+    // decrypt the encrypted data with your RSA keypair and AES key
+    ezcrypto.decrypt(encryptedData.message, encryptedData.key, keys.public, keys.private));
+    => 'secrets'
+  </code>
+</pre>
+
+Open @test.html@ in a browser and check console output for a demo.
+
+h1. License
+
+The MIT License
+
+Copyright (c) 2010 Max Ogden
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
