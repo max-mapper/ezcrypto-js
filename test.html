@@ -1,6 +1,12 @@
 <script src="ezcrypto.js"></script>
 <script>
-  var keys = ezcrypto.generateKeys();
-  var encryptedData = ezcrypto.encrypt('secrets', keys.public);
-  console.log(ezcrypto.decrypt(encryptedData.message, encryptedData.key, keys.public, keys.private));
+  // randomly generated key; stronger encryption
+  var key = ezcrypto.generateKey();
+  var encryptedData = ezcrypto.encrypt('potato', key);
+  console.log(ezcrypto.decrypt(encryptedData, key));
+
+  // with a password; weaker encryption
+  var key = ezcrypto.generateKey('password');
+  var encryptedData = ezcrypto.encrypt('nachos', key);
+  console.log(ezcrypto.decrypt(encryptedData, key));
 </script>

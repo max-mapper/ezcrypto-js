@@ -1,46 +1,75 @@
 (function() {
   var ezcrypto = this.ezcrypto = {};
   
-  ezcrypto.generateKeys = function() {
-    var keys = RSAGenerate(ezcrypto.randomNumber());
-    return {'public': keys.n, 'private': keys.d};
+  // Basic/simple API
+  ezcrypto.generateKey = function(password) {
+    var RSAkeys = RSAGenerate(ezcrypto.randomNumber());
+    var key = {'public': RSAkeys.n, 'private': RSAkeys.d};
+    if (password) {
+      key['encryptedPassword'] = ezcrypto.encryptRSA(password, key.public);
+    }
+    return key;
   }
   
-  ezcrypto.encrypt = function(message, publicKey) {
-    var bigNumSessionKey = new BigInteger(128, 1, ezcrypto.randomNumber());
-    var sessionKey = bigNumSessionKey.toString(16);
-    var encryptedMessage = byteArrayToHex(rijndaelEncrypt(message, hexToByteArray(sessionKey), 'ECB'));
-    var encryptedKey = RSAEncrypt(sessionKey, publicKey);
-    return {'key': encryptedKey, 'message': encryptedMessage};
+  ezcrypto.encrypt = function(message, key) {
+    var password = ezcrypto.getPassword(key);
+    return ezcrypto.encryptAES(message, password)
   }
   
-  ezcrypto.decrypt = function(encryptedMessage, encryptedKey, publicKey, privateKey) {
-    var decryptedKey = RSADecrypt(encryptedKey, publicKey, privateKey);
-    var decryptedMessage = byteArrayToString(rijndaelDecrypt(hexToByteArray(encryptedMessage), hexToByteArray(decryptedKey), 'ECB'));
-    return decryptedMessage;
+  ezcrypto.decrypt = function(message, key) {
+    var password = ezcrypto.getPassword(key);
+    return ezcrypto.decryptAES(message, password);
+  }
+  
+  // Core encryption functions
+  ezcrypto.encryptRSA = function(message, publicKey) {
+    return RSAEncrypt(message, publicKey);
+  }
+  
+  ezcrypto.decryptRSA = function(message, publicKey, privateKey) {
+    return RSADecrypt(message, publicKey, privateKey);
+  }
+  
+  ezcrypto.encryptAES = function(message, password){
+    var aes = new pidCrypt.AES.CBC();
+    var encryptedMessage = aes.encryptText(message, password, {nBits: 128});
+    return encryptedMessage;
+  }
+  
+  ezcrypto.decryptAES = function(message, password){
+    var aes = new pidCrypt.AES.CBC();
+    var plain = aes.decryptText(message, password, {nBits: 128});
+    return plain;
+  }
+  
+  // Utility functions
+  ezcrypto.getPassword = function(key) {
+    var password = key.public;
+    if ("encryptedPassword" in key) password = ezcrypto.decryptRSA(key['encryptedPassword'], key.public, key.private);
+    return password;
   }
   
   ezcrypto.randomNumber = function() {
     return new SecureRandom();
   }
   
-  function load(scripts) {
+  ezcrypto.loadScripts = function(scripts) {
     for (var i=0; i < scripts.length; i++) {
       document.write('<script src="'+scripts[i]+'"><\/script>')
     };
   };
 
-  load([
+  ezcrypto.loadScripts([
     "vendor/pidcrypt.js",
     "vendor/pidcrypt_util.js",
-    "vendor/asn1.js",
     "vendor/jsbn.js",
+    "vendor/md5.js",
+    "vendor/aes_core.js",
+    "vendor/aes_cbc.js",
     "vendor/rng.js",
     "vendor/prng4.js",
     "vendor/rsa.js",
-    "vendor/genkey.js",
-    "vendor/rijndael.js",
-    "vendor/custom.js"
+    "vendor/unhosted_encryption.js"
   ]);
   
 })();

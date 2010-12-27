@@ -9,24 +9,59 @@ I didn't write any of the encryption libraries, I just wrapped them in a nice an
 
 **WARNING**: JavaScript crytography is still more or less the wild west. See "this article":http://rdist.root.org/2010/11/29/final-post-on-javascript-crypto for a pretty decent explanation of what you are getting yourself into. Use at your own risk.
 
-h1. Example
 
-When you load @ezcrypto.js@ it will include all of the JavaScript files in @vendor/@. In the future this might turn into one big CommonJS style module.
+h1. Usage
+
+h3. Loading the libraries
+
+When you load @ezcrypto.js@ it will include the JavaScript encryption libraries from @vendor/@. In the future this might turn into one big CommonJS style module.
+
+<pre>
+  <code>
+    <script src="ezcrypto.js"></script>
+  </pre>
+</code>
+
+
+h3. Generating a key and encrypting data using that key
+
+The most secure type of key is the randomly generated key:
 
 <pre>
   <code>
     <script src="ezcrypto.js"></script>
     
-    // generate a public/private RSA keypair
-    var keys = ezcrypto.generateKeys();
+    // generate an RSA keypair
+    var key = ezcrypto.generateKey();
     => {"private": "3521df…", "public": "95d8cf…"}
     
-    // AES encrypt your message, and then encrypt the AES key with your public RSA key
-    var encryptedData = ezcrypto.encrypt('secrets', keys.public);
+    // encrypt a message with your key
+    // under the hood, this AES encrypts your message using your RSA key
+    // because AES works better with larger chunks of data than RSA
+    var encryptedData = ezcrypto.encrypt('secrets', key);
     => {"key": "8170f7…", "message": "72308a…"}
     
-    // decrypt the encrypted data with your RSA keypair and AES key
-    ezcrypto.decrypt(encryptedData.message, encryptedData.key, keys.public, keys.private));
+    // decrypt the encrypted data with your key
+    ezcrypto.decrypt(encryptedData, key));
+    => 'secrets'
+  </code>
+</pre>
+
+h3. Generating a key with a password and encrypting data using that password
+
+You can also use a password to encrypt data, in case you don't want to store keys and instead want to remember passwords. This is obviously less secure since rememberable passwords are much much shorter than RSA keys. The @generateKey@ method simply creates JavaScript Objects.
+
+<pre>
+  <code>    
+    // generate an RSA keypair and immediately encrypt the users password using the RSA key.
+    var key = ezcrypto.generateKey('my_awesome_password');
+    => {"private": "3521df…", "public": "95d8cf…", "encryptedPassword": "823jbv…"}
+    
+    // encrypting and decrypting messages works the same
+    var encryptedData = ezcrypto.encrypt('secrets', key);
+    => {"key": "2j9svs…", "message": "393bb3…"}
+    
+    ezcrypto.decrypt(encryptedData, key));
     => 'secrets'
   </code>
 </pre>
