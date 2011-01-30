@@ -1,3 +1,11 @@
+if (typeof(document) === 'undefined' || nodemode){
+  nodemode = true;
+  document = {};
+  document.write = function(foo){};
+  BigInteger = require('./jsbn.js').BigInteger;
+
+}
+
 // Generate a new random private key B bits long, using public expt E
 function RSAGenerate(randomNumber) {
 	var qs = 512>>1;
@@ -68,4 +76,8 @@ var RSADecrypt = function(ctext, pubkey, privkey) {//copied from rsa.js script i
 	var m = c.modPow(d, n);
 	if(m == null) return null;
 	return pkcs1unpad2(m, (n.bitLength()+7)>>3);
+}
+
+if(nodemode){
+  exports.RSAGenerate = RSAGenerate;
 }

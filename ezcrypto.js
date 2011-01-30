@@ -1,3 +1,12 @@
+
+if (typeof(document) === 'undefined'){
+  nodemode = true;
+  document = {}
+  document.write = function(foo){};
+  var SecureRandom = require('./vendor/rng.js').SecureRandom;
+  var RSAGenerate = require('./vendor/unhosted_encryption.js').RSAGenerate;
+}
+
 (function() {
   var ezcrypto = this.ezcrypto = {};
   
@@ -58,8 +67,8 @@
       document.write('<script src="'+scripts[i]+'"><\/script>')
     };
   };
-
-  ezcrypto.loadScripts([
+  
+  ezcrypto.scripts = [
     "vendor/pidcrypt.js",
     "vendor/pidcrypt_util.js",
     "vendor/jsbn.js",
@@ -70,6 +79,22 @@
     "vendor/prng4.js",
     "vendor/rsa.js",
     "vendor/unhosted_encryption.js"
-  ]);
+  ]
+
+  ezcrypto.loadScripts(ezcrypto.scripts);
   
 })();
+
+
+//console.log(ezcrypto.scripts);
+if (nodemode){
+  for (x in ezcrypto.scripts){
+    var script = ezcrypto.scripts[x];
+    //console.log(script);
+    //require("./"+script);
+  }
+  
+  exports.ezcrypto= ezcrypto;
+}
+
+
