@@ -5,6 +5,12 @@ if (typeof(document) === 'undefined'){
   document.write = function(foo){};
   var SecureRandom = require('./vendor/rng.js').SecureRandom;
   var RSAGenerate = require('./vendor/unhosted_encryption.js').RSAGenerate;
+  //var unhosted = require('./vendor/unhosted.js');
+  var RSASign = require('./vendor/unhosted.js').unhosted.RSASign;
+  var Verify = require('./vendor/unhosted.js').unhosted.checkPubSign;
+  //console.log(RSASign);
+  var sha1 = require('./vendor/sha1.js');
+  //console.log(sha1.sha1.hex);
 }
 
 (function() {
@@ -20,6 +26,9 @@ if (typeof(document) === 'undefined'){
     return key;
   }
   
+  ezcrypto.sign = function(hexHash, n, d) { return RSASign(hexHash, n, d).toString(16) };
+  ezcrypto.verify = function(msg, sig, pubkey){ return Verify(msg, sig, pubkey) };
+    
   ezcrypto.encrypt = function(message, key) {
     var password = ezcrypto.getPassword(key);
     return ezcrypto.encryptAES(message, password)
@@ -57,6 +66,8 @@ if (typeof(document) === 'undefined'){
     if ("encryptedPassword" in key) password = ezcrypto.decryptRSA(key['encryptedPassword'], key.public, key.private);
     return password;
   }
+  
+  ezcrypto.hash = function(data){ return sha1.sha1.hex(data); } //console.log(sha1.sha1.hex());
   
   ezcrypto.randomNumber = function() {
     return new SecureRandom();
