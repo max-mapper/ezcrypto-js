@@ -1,3 +1,10 @@
+if (typeof(document) === 'undefined' || nodemode){
+  nodemode = true;
+  document = {};
+  navigator = {};
+  document.write = function(foo){};
+}
+
 /*
  * Copyright (c) 2003-2005  Tom Wu
  * All Rights Reserved.
@@ -1230,3 +1237,7 @@ BigInteger.prototype.isProbablePrime = bnIsProbablePrime;
 // int hashCode()
 // long longValue()
 // static BigInteger valueOf(long val)
+
+if(nodemode){
+  exports.BigInteger = BigInteger;
+}
