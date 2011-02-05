@@ -1,4 +1,4 @@
-if (typeof(document) === 'undefined' || nodemode){
+if (typeof(document) === 'undefined' || typeof(nodemode) !== "undefined"){
   nodemode = true;
   document = {};
   navigator = {};
@@ -1238,6 +1238,6 @@ BigInteger.prototype.isProbablePrime = bnIsProbablePrime;
 // long longValue()
 // static BigInteger valueOf(long val)
 
-if(nodemode){
+if(typeof(nodemode) !== "undefined") {
   exports.BigInteger = BigInteger;
 }

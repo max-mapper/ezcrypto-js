@@ -46,7 +46,7 @@ function prng_newstate() {
 // An array of bytes the size of the pool will be passed to init()
 var rng_psize = 256;
 
-if(nodemode){
+if(typeof(nodemode) !== "undefined") {
   exports.rng_psize = rng_psize;
   exports.prng_newstate = prng_newstate;
 }

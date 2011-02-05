@@ -210,3 +210,6 @@ function pidCrypt(){
   //TODO warnings
 }
 
+if (typeof(nodemode) !== "undefined") {
+  exports.pidCrypt = pidCrypt;
+}

@@ -1,13 +1,15 @@
-if (typeof(document) === 'undefined' || nodemode){
+if (typeof(document) === 'undefined' || typeof(nodemode) !== "undefined"){
   nodemode = true;
   document = {};
   document.write = function(foo){};
-  BigInteger = require('./jsbn.js').BigInteger;
-
+  var BigInteger   = require('./jsbn.js').BigInteger;
+  var SecureRandom = require('./rng.js').SecureRandom;
 }
 
+var unhosted = this.unhosted = {};
+
 // Generate a new random private key B bits long, using public expt E
-function RSAGenerate(randomNumber) {
+unhosted.RSAGenerate = function(randomNumber) {
     var qs = 512>>1;
     this.e = parseInt("10001", 16);
     var ee = new BigInteger("10001", 16);
@@ -39,45 +41,79 @@ function RSAGenerate(randomNumber) {
     }
 }
 
-var createPub = function(nick, cloud, token, randomNumber) {
-    var t = JSON.parse(token);
-    key = RSAGenerate();
-    key.c = cloud;
-    key.r = t.r;
-    key.w = t.w;
-    var bnSeskey = new BigInteger(128,1,randomNumber); // rijndael function we use uses a 128-bit key
-    key.s = bnSeskey.toString(16);
-    return key;
+unhosted.RSAEncrypt = function(text, pubkey) {//copied from the rsa.js script included in Tom Wu's jsbn library
+	var n = new BigInteger();	n.fromString(pubkey, 16);
+	var m = unhosted.pkcs1pad2(text,(n.bitLength()+7)>>3);	if(m == null) return null;
+	var c = m.modPowInt(parseInt("10001", 16), n);	if(c == null) return null;
+	var h = c.toString(16);	
+	if((h.length & 1) == 0) return h; else return "0" + h;
 }
 
-var submitNS = function(key) {
-    unhosted.importPub(key, "newKey");
-    unhosted.rawSet("newKey", ".n", key.n, false);
-    unhosted.rawSet("newKey", ".s", key.s, true);
+unhosted.RSADecrypt = function(ctext, pubkey, privkey) {//copied from rsa.js script included in Tom Wu's jsbn library
+	var c = new BigInteger(ctext, 16);
+	var n = new BigInteger();	n.fromString(pubkey, 16);
+	var d = new BigInteger();	d.fromString(privkey, 16);
+	var m = c.modPow(d, n);
+	if(m == null) return null;
+	return unhosted.pkcs1unpad2(m, (n.bitLength()+7)>>3);
 }
 
-var RSAEncrypt = function(text, pubkey) {//copied from the rsa.js script included in Tom Wu's jsbn library
-    /*
-  if((typeof keys[nick] === 'undefined') || (typeof keys[nick].n === 'undefined')) {
-        alert("user "+nick+" doesn't look like a valid unhosted account");
-    }
-  */
-    var n = new BigInteger();	n.fromString(pubkey, 16);
-    var m = pkcs1pad2(text,(n.bitLength()+7)>>3);	if(m == null) return null;
-    var c = m.modPowInt(parseInt("10001", 16), n);	if(c == null) return null;
-    var h = c.toString(16);	
-    if((h.length & 1) == 0) return h; else return "0" + h;
+unhosted.RSASign = function(sHashHex, pub, priv) {//this function copied from the rsa.js script included in Tom Wu's jsbn library
+	var n = new BigInteger();	n.fromString(pub, 16);
+	var sMid = "";	var fLen = (n.bitLength() / 4) - sHashHex.length - 6;
+	for (var i = 0; i < fLen; i += 2) {
+		sMid += "ff";
+	}
+	hPM = "0001" + sMid + "00" + sHashHex;//this pads the hash to desired length - not entirely sure whether those 'ff' should be random bytes for security or not
+	var x = new BigInteger(hPM, 16);//turn the padded message into a jsbn BigInteger object
+	var d = new BigInteger();	d.fromString(priv, 16);
+	return x.modPow(d, n);
 }
 
-var RSADecrypt = function(ctext, pubkey, privkey) {//copied from rsa.js script included in Tom Wu's jsbn library
-    var c = new BigInteger(ctext, 16);
-    var n = new BigInteger();	n.fromString(pubkey, 16);
-    var d = new BigInteger();	d.fromString(privkey, 16);
-    var m = c.modPow(d, n);
-    if(m == null) return null;
-    return pkcs1unpad2(m, (n.bitLength()+7)>>3);
+// PKCS#1 (type 2, random) pad input string s to n bytes, and return a bigint
+unhosted.pkcs1pad2 = function(s,n) {//copied from the rsa.js script included in Tom Wu's jsbn library
+	if(n < s.length + 11) {
+		alert("Message too long for RSA");
+		return null;
+	}
+	var ba = new Array();
+	var i = s.length - 1;
+	while(i >= 0 && n > 0) ba[--n] = s.charCodeAt(i--);
+	ba[--n] = 0;
+	var x = new Array();
+	var rng = new SecureRandom();
+	while(n > 2) { // random non-zero pad
+		x[0] = 0;
+		while(x[0] == 0) rng.nextBytes(x);
+		ba[--n] = x[0];
+	}
+	ba[--n] = 2;
+	ba[--n] = 0;
+	return new BigInteger(ba);
 }
 
-if(nodemode){
-  exports.RSAGenerate = RSAGenerate;
+// Undo PKCS#1 (type 2, random) padding and, if valid, return the plaintext
+unhosted.pkcs1unpad2 = function(d,n) {//copied from the rsa.js script included in Tom Wu's jsbn library
+	var b = d.toByteArray();
+	var i = 0;
+	while(i < b.length && b[i] == 0) ++i;
+	if(b.length-i != n-1 || b[i] != 2)
+		return null;
+	++i;
+	while(b[i] != 0)
+		if(++i >= b.length) return null;
+	var ret = "";
+	while(++i < b.length)
+		ret += String.fromCharCode(b[i]);
+	return ret;
+}
+
+unhosted.checkPubSign = function(cmd, PubSign, nick_n) {//check a signature. based on rsa-sign.js. uses Tom Wu's jsbn library.
+	var n = new BigInteger();	n.fromString(nick_n, 16);
+	var x = new BigInteger(PubSign.replace(/[ \n]+/g, ""), 16);
+	return (x.modPowInt(parseInt("10001", 16), n).toString(16).replace(/^1f+00/, '') == sha1.hex(cmd));
+}
+
+if(typeof(nodemode) !== "undefined") {
+  exports.unhosted = unhosted;
 }

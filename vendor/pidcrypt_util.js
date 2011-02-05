@@ -345,3 +345,7 @@ pidCryptUtil.byteArray2String = function(b){
 //  alert(out);
   return s;
 }
+
+if (typeof(nodemode) !== "undefined") {
+  exports.pidCryptUtil = pidCryptUtil;
+}

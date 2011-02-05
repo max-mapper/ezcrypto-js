@@ -1,16 +1,10 @@
-
 if (typeof(document) === 'undefined'){
   nodemode = true;
   document = {}
   document.write = function(foo){};
   var SecureRandom = require('./vendor/rng.js').SecureRandom;
-  var RSAGenerate = require('./vendor/unhosted_encryption.js').RSAGenerate;
-  //var unhosted = require('./vendor/unhosted.js');
-  var RSASign = require('./vendor/unhosted.js').unhosted.RSASign;
-  var Verify = require('./vendor/unhosted.js').unhosted.checkPubSign;
-  //console.log(RSASign);
-  var sha1 = require('./vendor/sha1.js');
-  //console.log(sha1.sha1.hex);
+  var unhosted     = require('./vendor/unhosted_encryption.js').unhosted;
+  var sha1         = require('./vendor/sha1.js');
 }
 
 (function() {
@@ -18,7 +12,7 @@ if (typeof(document) === 'undefined'){
   
   // Basic/simple API
   ezcrypto.generateKey = function(password) {
-    var RSAkeys = RSAGenerate(ezcrypto.randomNumber());
+    var RSAkeys = unhosted.RSAGenerate(ezcrypto.randomNumber());
     var key = {'public': RSAkeys.n, 'private': RSAkeys.d};
     if (password) {
       key['encryptedPassword'] = ezcrypto.encryptRSA(password, key.public);
@@ -26,8 +20,8 @@ if (typeof(document) === 'undefined'){
     return key;
   }
   
-  ezcrypto.sign = function(hexHash, n, d) { return RSASign(hexHash, n, d).toString(16) };
-  ezcrypto.verify = function(msg, sig, pubkey){ return Verify(msg, sig, pubkey) };
+  ezcrypto.sign = function(hexHash, n, d) { return unhosted.RSASign(hexHash, n, d).toString(16) };
+  ezcrypto.verify = function(msg, sig, pubkey){ return unhosted.checkPubSign(msg, sig, pubkey) };
     
   ezcrypto.encrypt = function(message, key) {
     var password = ezcrypto.getPassword(key);
@@ -41,11 +35,11 @@ if (typeof(document) === 'undefined'){
   
   // Core encryption functions
   ezcrypto.encryptRSA = function(message, publicKey) {
-    return RSAEncrypt(message, publicKey);
+    return unhosted.RSAEncrypt(message, publicKey);
   }
   
   ezcrypto.decryptRSA = function(message, publicKey, privateKey) {
-    return RSADecrypt(message, publicKey, privateKey);
+    return unhosted.RSADecrypt(message, publicKey, privateKey);
   }
   
   ezcrypto.encryptAES = function(message, password){
@@ -97,14 +91,6 @@ if (typeof(document) === 'undefined'){
 })();
 
 
-//console.log(ezcrypto.scripts);
-if (nodemode){
-  for (x in ezcrypto.scripts){
-    var script = ezcrypto.scripts[x];
-    //console.log(script);
-    //require("./"+script);
-  }
-  
-  exports.ezcrypto= ezcrypto;
+if (typeof(nodemode) !== "undefined") {
+  exports.ezcrypto = ezcrypto;
 }
-

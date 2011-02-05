@@ -6,11 +6,12 @@
 // <body onClick='rng_seed_time();' onKeyPress='rng_seed_time();'>
 // in your main HTML document.
 
-if(nodemode){
+if(typeof(nodemode) !== "undefined") {
   navigator = {};
   rng_psize = require('./prng4.js').rng_psize;
   prng_newstate = require('./prng4.js').prng_newstate;
 }
+
 function SecureRandom() {
   this.rng_state;
   this.rng_pool;
@@ -74,8 +75,6 @@ function SecureRandom() {
     }
 }
 
-if(nodemode){
+if(typeof(nodemode) !== "undefined") {
   exports.SecureRandom = SecureRandom;
 }
-  
-
